@@ -189,11 +189,55 @@ int main()
 	int c[3] = { 0 };
 	res_s cur_res, best_res;
 	best_res.score = 0;
-	/*                      a1   a2   b1   b2   bmin */
-	//double weights[5] = { 1.0, 0.0, 1.0, 0.0, 1.0 };
-	//double weights[5] = { 0.0, 1.0, 0.0, 1.0, 1.0 };
-	//double weights[5] = { 1.0, 0.5, 2.0, 0.8, 1.0 };
+	/* Weights examples:  a1   a2   b1   b2   bmin
+	double weights[5] = { 1.0, 0.0, 1.0, 0.0, 1.0 };	// For quick one-ruond diffusion
+	double weights[5] = { 0.0, 1.0, 0.0, 1.0, 1.0 };	// For long-term diffusion
+	double weights[5] = { 1.0, 0.5, 2.0, 0.8, 1.0 };	// For balanced diffusion
+	double weights[5] = { 1.0, 2.0, 1.0, 2.0, 1.0 };	// For balanced diffusion with more emphasis on double-round
+	*/
 	double weights[5] = { 1.0, 2.0, 1.0, 2.0, 1.0 };
+	bool accepted = false;
+	while (!accepted) {
+		printf("Proceed with default weights? (y/n): ");
+		accepted = true;
+		char ans = _getch();
+		printf("\n");
+		if (ans != 'y' && ans != 'Y')
+		{
+			printf("Enter weights for a1, a2, b1, b2, bmin (space-separated): ");
+			if(5 != scanf_s("%lf %lf %lf %lf %lf", &weights[0], &weights[1], &weights[2], &weights[3], &weights[4]))
+			{
+				printf("Invalid input! Try again.\n");
+				accepted = false;
+				continue;
+			}
+		}
+		else
+		{
+			weights[0] = 1.0;
+			weights[1] = 2.0;
+			weights[2] = 1.0;
+			weights[3] = 2.0;
+			weights[4] = 1.0;
+			break;
+		}
+		double sum = 0;
+		for (int i = 0;i < 5;i++) {
+			sum += weights[i];
+			if (weights[i] < 0)
+			{
+				printf("Weights must be non-negative! Try again.\n");
+				accepted = false;
+				continue;
+			}
+		}
+		if (sum == 0)
+		{
+			printf("Weights must not be all zero! Try again.\n");
+			accepted = false;
+			continue;
+		}
+	}
 	
 	print_res_header(weights);
 	do
@@ -204,7 +248,7 @@ int main()
 			score(&cur_res, weights);
 			if (cur_res.score > best_res.score) {
 				best_res = cur_res;
-				print_res(&best_res);
+				//print_res(&best_res); // Uncomment this to print every current best result
 			}
 		}
 	} while (!next(c, 3, 32));
