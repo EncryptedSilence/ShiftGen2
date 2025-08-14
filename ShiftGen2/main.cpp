@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <conio.h>
 #include <Windows.h>
+#include <intrin.h>
 
 #define ROTL(a,b) ((a<<b)|(a>>(32-b)))
 #define MAXBLOCKLEN 16
@@ -37,7 +38,7 @@ bool next(int* c, int sz, int m)
 	return false;
 }
 
-inline void lin444_r2(uint32_t* din, uint32_t* dout, int c0[3])
+static inline void lin444_r2(uint32_t* din, uint32_t* dout, int c0[3])
 {
 	dout[0] = din[0] ^ ROTL(din[1], c0[0]) ^ ROTL(din[2], c0[1]) ^ ROTL(din[3], c0[2]);
 	dout[1] = din[1] ^ ROTL(din[2], c0[0]) ^ ROTL(din[3], c0[1]) ^ ROTL(dout[0], c0[2]);
@@ -49,7 +50,7 @@ inline void lin444_r2(uint32_t* din, uint32_t* dout, int c0[3])
 	dout[2] = dout[2] ^ ROTL(dout[3], c0[0]) ^ ROTL(dout[0], c0[1]) ^ ROTL(dout[1], c0[2]);
 	dout[3] = dout[3] ^ ROTL(dout[0], c0[0]) ^ ROTL(dout[1], c0[1]) ^ ROTL(dout[2], c0[2]);
 }
-inline void lin444_r1(uint32_t* din, uint32_t* dout, int c0[3])
+static inline void lin444_r1(uint32_t* din, uint32_t* dout, int c0[3])
 {
 	dout[0] = din[0] ^ ROTL(din[1], c0[0]) ^ ROTL(din[2], c0[1]) ^ ROTL(din[3], c0[2]);
 	dout[1] = din[1] ^ ROTL(din[2], c0[0]) ^ ROTL(din[3], c0[1]) ^ ROTL(dout[0], c0[2]);
@@ -66,7 +67,7 @@ struct max_s
 	int level;
 	bool can_levelup;
 	max_s* nextlevel;
-	char color[6];
+	char color[8];
 	void (*f)(uint32_t* din, uint32_t* dout, int c0[3]);
 	int dmin;
 	double best_score;
@@ -102,7 +103,6 @@ void all_max(int* c, max_s* max_vals, res_s *fres, double weights[5])
 {
 	uint8_t data_in[MAXBLOCKLEN] = { 0 }, test[MAXBLOCKLEN];
 	uint32_t* din = (uint32_t*)data_in, * tst = (uint32_t*)test;
-	int w[16] = { 0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4 };
 	int diff = 0;
 	int act_total = 0;
 	fres->valid = true;
@@ -117,7 +117,7 @@ void all_max(int* c, max_s* max_vals, res_s *fres, double weights[5])
 			for (int i = 0; i < MAXBLOCKLEN; i++)
 			{
 				uint8_t temp = test[i];
-				diff += w[temp & 0xf] + w[temp >> 4];
+				diff += __popcnt(temp);
 				if (temp)
 					res++;
 			}
