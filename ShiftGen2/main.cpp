@@ -3,8 +3,11 @@
 #include <conio.h>
 #include <Windows.h>
 
-#define MAXBLOCKLEN 16
 #define ROTL(a,b) ((a<<b)|(a>>(32-b)))
+#define MAXBLOCKLEN 16
+#define BYTESINWORD 4
+#define BITSINBYTE 8
+#define WORDSIZE 32.0
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -104,14 +107,14 @@ void all_max(int* c, max_s* max_vals, res_s *fres, double weights[5])
 	int act_total = 0;
 	fres->valid = true;
 	int min = MAXBLOCKLEN;
-	for (int b = 0;b < 4;b++)
+	for (int b = 0;b < BYTESINWORD;b++)
 	{
-		for (int pos = 0;pos < 8;pos++)
+		for (int pos = 0;pos < BITSINBYTE;pos++)
 		{
 			din[b] = 1 << pos;
 			max_vals->f(din, tst, c);
 			int res = 0;
-			for (int i = 0; i < 16; i++)
+			for (int i = 0; i < MAXBLOCKLEN; i++)
 			{
 				uint8_t temp = test[i];
 				diff += w[temp & 0xf] + w[temp >> 4];
@@ -131,17 +134,17 @@ void all_max(int* c, max_s* max_vals, res_s *fres, double weights[5])
 		}
 		din[b] = 0;
 	}
-	double avgdiff = (double)diff / 32;
+	double avgdiff = (double)diff / WORDSIZE;
 	if (max_vals->level == 0)
 	{
 		fres->a1 = avgdiff;
-		fres->b1 = (double)act_total / 32.0;
+		fres->b1 = (double)act_total / WORDSIZE;
 		fres->bmin = min + 1;
 	}
 	if (max_vals->level == 1)
 	{
 		fres->a2 = avgdiff;
-		fres->b2 = (double)act_total / 32.0;
+		fres->b2 = (double)act_total / WORDSIZE;
 	}
 	if (max_vals->can_levelup)
 	{
